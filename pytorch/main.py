@@ -21,6 +21,43 @@ import models.dcgan as dcgan
 import models.mlp as mlp
 import json
 
+def get_pipe_label(pipe):
+   if pipe == 1:
+      return [1,0,0]
+   elif pipe == 2:
+      return [0,1,0]
+   elif pipe == 3:
+      return [0,0,1]
+   
+def get_mario_playable(pipe):
+    mario_chars_unique = sorted(list(["-","X", "}", "{", "<", ">", "[", "]", "Q", "S"]))
+    int2char = dict(enumerate(mario_chars_unique))
+
+    char2int = {ch: ii for ii, ch in int2char.items()}
+    num_tiles = len(char2int)
+
+    levels = []
+    labels = []
+    current_block = []
+    with open(f"../db/big-<-{pipe}", 'r') as file:
+        for line in file:
+            # line = line.replace("[", "<")
+            # line = line.replace("]", ">")
+            line = line.rstrip('\n')
+            if all(char in mario_chars_unique for char in line):
+                ncoded_line = [char2int[x] for x in line]
+                current_block.append(ncoded_line)
+            else:
+                if len(current_block) > 0:
+                    current_block = np.array(current_block).reshape(14, 32)
+                    levels.append(current_block)
+                    current_block = []
+                    labels.append(get_pipe_label(pipe))
+
+    # levels = np.eye(num_tiles, dtype='uint8')[levels]
+    # levels = levels.reshape(-1,14, 32, 10)
+    return levels, labels
+
 #Run with "python main.py"
 
 parser = argparse.ArgumentParser()
@@ -67,7 +104,14 @@ if opt.problem == 0:
     examplesJson = "example.json"
 else:
     examplesJson= "sepEx/examplemario{}.json".format(opt.problem)
-X = np.array ( json.load(open(examplesJson)) )
+# X = np.array ( json.load(open(examplesJson)) )
+pipe_1_playble, pipe_1_playble_labels = get_mario_playable(1)
+# pipe_1_unplayble, pipe_1_unplayble_labels = get_mario_unplayable(1)
+pipe_2_playble, pipe_2_playble_labels = get_mario_playable(2)
+# pipe_2_unplayble, pipe_2_unplayble_labels = get_mario_unplayable(2)
+pipe_3_playble, pipe_3_playble_labels = get_mario_playable(3)
+# pipe_3_unplayble, pipe_3_unplayble_labels = get_mario_unplayable(3)
+X = np.concatenate((pipe_1_playble, pipe_2_playble, pipe_3_playble))
 print(X)
 print(X.shape)
 z_dims = 10 #Numer different title types
