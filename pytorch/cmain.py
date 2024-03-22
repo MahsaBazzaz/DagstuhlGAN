@@ -1,5 +1,6 @@
 from __future__ import print_function
 import argparse
+import pdb
 import random
 import torch
 import torch.nn as nn
@@ -235,44 +236,56 @@ for epoch in range(opt.niter):
             for p in netD.parameters():
                 p.data.clamp_(opt.clamp_lower, opt.clamp_upper)
 
-            data = X_train[i*opt.batchSize:(i+1)*opt.batchSize]
-            label = y_train[i*opt.batchSize:(i+1)*opt.batchSize]
+            if (i+1)*opt.batchSize <= len(X_train):
+                data = X_train[i*opt.batchSize:(i+1)*opt.batchSize]
+                label = y_train[i*opt.batchSize:(i+1)*opt.batchSize]
+            else:
+                # Handling the last batch
+                data = X_train[i*opt.batchSize:]
+                label = y_train[i*opt.batchSize:]
             i += 1
+            # data = X_train[i*opt.batchSize:(i+1)*opt.batchSize]
+            # label = y_train[i*opt.batchSize:(i+1)*opt.batchSize]
+            if len(data) == opt.batchSize and len(label) == opt.batchSize:
+                
 
-            real_cpu = torch.FloatTensor(data)
-            real_label = torch.FloatTensor(label)
+                real_cpu = torch.FloatTensor(data)
+                real_label = torch.FloatTensor(label)
 
-            if (False):
-                #im = data.cpu().numpy()
-                print(data.shape)
-                real_cpu = combine_images( tiles2image( np.argmax(data, axis = 1) ) )
-                print(real_cpu)
-                plt.imsave('{0}/real_samples.png'.format(opt.experiment), real_cpu)
-                exit()
-           
-            netD.zero_grad()
-            #batch_size = num_samples #real_cpu.size(0)
+                if (False):
+                    #im = data.cpu().numpy()
+                    print(data.shape)
+                    real_cpu = combine_images( tiles2image( np.argmax(data, axis = 1) ) )
+                    print(real_cpu)
+                    plt.imsave('{0}/real_samples.png'.format(opt.experiment), real_cpu)
+                    exit()
+            
+                netD.zero_grad()
+                #batch_size = num_samples #real_cpu.size(0)
 
-            if opt.cuda:
-                real_cpu = real_cpu.cuda()
-                real_label = real_label.cuda()
+                if opt.cuda:
+                    real_cpu = real_cpu.cuda()
+                    real_label = real_label.cuda()
 
-            input.resize_as_(real_cpu).copy_(real_cpu)
-            inputv = Variable(input)
-            labelv = Variable(real_label)
+                input.resize_as_(real_cpu).copy_(real_cpu)
+                inputv = Variable(input)
+                labelv = Variable(real_label)
 
-            errD_real = netD(inputv, labelv)
-            errD_real.backward(one)
+                errD_real = netD(inputv, labelv)
+                errD_real.backward(one)
 
-            # train with fake
-            noise.resize_(opt.batchSize, nz, 1, 1).normal_(0, 1)
-            noisev = Variable(noise, volatile = True) # totally freeze netG
-            fake = Variable(netG(noisev, labelv).data)
-            inputv = fake
-            errD_fake = netD(inputv, labelv)
-            errD_fake.backward(mone)
-            errD = errD_real - errD_fake
-            optimizerD.step()
+                # train with fake
+                noise.resize_(opt.batchSize, nz, 1, 1).normal_(0, 1)
+                noisev = Variable(noise, volatile = True) # totally freeze netG
+                fake = Variable(netG(noisev, labelv).data)
+                inputv = fake
+                errD_fake = netD(inputv, labelv)
+                errD_fake.backward(mone)
+                errD = errD_real - errD_fake
+                optimizerD.step()
+            else:
+                print("batchsize mismatch")
+                print(len(data), len(label))
 
         ############################
         # (2) Update G network
