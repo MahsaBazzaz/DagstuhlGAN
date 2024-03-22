@@ -13,5 +13,5 @@ module load anaconda3/2022.05
 module load python/3.8.1
 pip install -r requirements.txt
 
-command5="python pytorch/main.py"
+command5="python pytorch/main.py --experiment out"
 $command5 > logs/CGAN.txt
