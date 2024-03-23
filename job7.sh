@@ -13,5 +13,5 @@ module load anaconda3/2022.05
 module load python/3.8.1
 pip install -r requirements.txt
 
-command5="python pytorch/cmain.py --experiment out_CDCGAN50 --niter 50"
+command5="python pytorch/cmain.py --experiment out_CDCGAN700 --niter 700"
 $command5 > logs/CDCGAN.txt

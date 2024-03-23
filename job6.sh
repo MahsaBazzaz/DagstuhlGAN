@@ -13,5 +13,5 @@ module load anaconda3/2022.05
 module load python/3.8.1
 pip install -r requirements.txt
 
-command5="python pytorch/main.py --experiment out_DCGAN50 --niter 50"
+command5="python pytorch/main.py --experiment out_DCGAN700 --niter 700"
 $command5 > logs/DCGAN.txt
